@@ -1,0 +1,35 @@
+<svg width="800" height="200" xmlns="http://www.w3.org/2000/svg" style="background-color: #f4f4f9;">
+    
+    <!-- Title/Description -->
+    <text x="10" y="30" font-family="Arial, sans-serif" font-size="18" fill="#333333">Process Flow Diagram Example</text>
+    <text x="10" y="55" font-family="Arial, sans-serif" font-size="12" fill="#666666">A simple sequence visualization.</text>
+
+    <!-- Step 1: Start (Rectangle) -->
+    <rect x="50" y="50" width="150" height="100" rx="10" ry="10" style="fill:#caffcf; stroke:#339933; stroke-width:2;"/>
+    <text x="125" y="80" font-family="Arial, sans-serif" font-size="16" fill="#333333" text-anchor="middle">START</text>
+    <text x="125" y="110" font-family="Arial, sans-serif" font-size="12" fill="#333333" text-anchor="middle">Trigger Event</text>
+
+    <!-- Step 2: Action (Rectangle) -->
+    <rect x="300" y="50" width="150" height="100" rx="10" ry="10" style="fill:#cceeff; stroke:#3399cc; stroke-width:2;"/>
+    <text x="375" y="80" font-family="Arial, sans-serif" font-size="16" fill="#333333" text-anchor="middle">PROCESS</text>
+    <text x="375" y="110" font-family="Arial, sans-serif" font-size="12" fill="#333333" text-anchor="middle">Run Logic</text>
+
+    <!-- Step 3: End (Rectangle) -->
+    <rect x="550" y="50" width="150" height="100" rx="10" ry="10" style="fill:#ffffcc; stroke:#cc9933; stroke-width:2;"/>
+    <text x="625" y="80" font-family="Arial, sans-serif" font-size="16" fill="#333333" text-anchor="middle">END</text>
+    <text x="625" y="110" font-family="Arial, sans-serif" font-size="12" fill="#333333" text-anchor="middle">Completion</text>
+
+    <!-- Arrows (Connectors) -->
+    <!-- Arrow 1 (Start -> Process) -->
+    <line x1="200" y1="100" x2="300" y2="100" stroke="#333333" stroke-width="3" marker-end="url(#arrowhead)"/>
+    
+    <!-- Arrow 2 (Process -> End) -->
+    <line x1="450" y1="100" x2="550" y2="100" stroke="#333333" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+    <!-- Defining the Arrowhead Marker -->
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#333333" />
+        </marker>
+    </defs>
+</svg>

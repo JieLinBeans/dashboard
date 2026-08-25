@@ -1,0 +1,140 @@
+# LMS Trainer Portal
+
+A full-stack learning-management analytics dashboard for driving-instruction trainers, built from
+the provided wireframes: course/module management, batch & trainee progress tracking, live
+in-session event logs, module/cohort performance analysis, and an in-app chat assistant.
+
+- **Frontend:** Angular 18 (standalone components), plain CSS design system, no UI framework
+- **Backend:** Fastify + TypeScript, `pg` (no ORM — plain parameterized SQL), WebSockets for live events
+- **Database:** PostgreSQL (schema + seed data included)
+
+```
+lms-app/
+├── backend/          Fastify API (REST + WebSocket)
+├── frontend/          Angular app
+└── docker-compose.yml Optional: spins up a local Postgres for you
+```
+
+## 1. Prerequisites
+
+- Node.js 20+ and npm
+- A PostgreSQL 14+ server, OR Docker (to use the included `docker-compose.yml`)
+
+## 2. Database
+
+### Option A — Docker (easiest)
+
+```bash
+docker compose up -d
+```
+
+This starts Postgres on `localhost:5432` with:
+- user: `lms_user`
+- password: `lms_password`
+- database: `lms_db`
+
+(matching the backend's `.env.example` defaults, so you don't need to change anything).
+
+### Option B — your own local Postgres
+
+Create a database and user yourself, e.g.:
+
+```sql
+CREATE USER lms_user WITH PASSWORD 'lms_password';
+CREATE DATABASE lms_db OWNER lms_user;
+```
+
+Then update `backend/.env` (see below) to match your connection details.
+
+## 3. Backend setup
+
+```bash
+cd backend
+cp .env.example .env      # adjust DB credentials if needed
+npm install
+npm run migrate           # creates all tables
+npm run seed               # loads demo data matching the wireframes
+npm run dev                 # starts the API on http://localhost:3000
+```
+
+Health check: `curl http://localhost:3000/api/health` → `{"status":"ok"}`
+
+### Optional: real AI chat
+
+By default `/api/chat` uses a small built-in rule-based responder that can answer
+questions like "how many trainees are there" directly from the database. If you set
+`ANTHROPIC_API_KEY` in `backend/.env`, the chat endpoint will instead call the real
+Anthropic API (model `claude-sonnet-4-6`) with a summary of your current data as context.
+
+## 4. Frontend setup
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+npm start          # starts Angular dev server on http://localhost:4200
+```
+
+Open **http://localhost:4200** — you should see the trainer dashboard populated with the
+seeded demo data (Course 1 / Batch 10, Trainees 1–12, Module 1–4 progress, and a live
+event-log session for Trainee 1 in Module 3, matching the original wireframes).
+
+## 5. Building for production
+
+```bash
+# Backend
+cd backend && npm run build && npm start
+
+# Frontend
+cd frontend && npm run build
+# then serve frontend/dist/lms-frontend/browser with any static file server
+```
+
+Update `frontend/src/environments/environment.prod.ts` and `backend/.env`'s `CORS_ORIGIN`
+if you deploy the two apps on different hosts/ports.
+
+## What's included
+
+| Wireframe page | Where it lives |
+|---|---|
+| Dashboard home (p.10) | `/` |
+| Courses management, active/upcoming/available (p.9) | `/courses` |
+| Create Course (p.6) | `/courses/new` |
+| Create Module (p.7) | `/modules/new` |
+| Batch: modules + trainees progress (p.4 / p.8) | `/batches/:batchId` |
+| Learners / batch list (p.5) | `/learners` |
+| Trainee detail + live event log (p.3) | `/batches/:batchId/trainees/:traineeId` |
+| Trainee × module performance report (p.2) | `/attempts/:attemptId` |
+| Analytics landing / attention thumbnails (p.1) | `/analytics` |
+| In-depth module analysis (p.11) | `/analytics/modules/:moduleId` |
+| In-depth cohort analysis (p.13) | `/analytics/cohorts/:batchId` |
+| Chat (p.12) | `/chat` |
+
+## Live event logs
+
+When a trainee has an in-progress, "live" module attempt, the trainee detail page opens a
+WebSocket connection to `ws://localhost:3000/api/attempts/:attemptId/live` and appends any new
+events pushed to `POST /api/attempts/:attemptId/events` in real time. You can simulate a live
+event from the training-floor system (or curl) with:
+
+```bash
+curl -X POST http://localhost:3000/api/attempts/25/events \
+  -H "Content-Type: application/json" \
+  -d '{"event_type":"step_complete","description":"Step 6 complete","is_error":false}'
+```
+
+and watch it appear instantly on that trainee's page.
+
+## Notes on the data model
+
+- A **course** is made of several **modules** (`course_modules`), each of which can declare
+  prerequisites.
+- A **batch** is a scheduled run of a course, with trainees enrolled into it.
+- A **module attempt** is one trainee's attempt at one module within one batch — this is what
+  carries status (`to_do` / `in_progress` / `completed` / `failed`), score, and event logs.
+- **Performance indicators** are defined per module, with per-attempt scores.
+- **Reports** hold the free-text analysis + suggestions shown on the module/cohort analysis pages
+  (in a real deployment these would likely be generated by an LLM job rather than hand-seeded).
+
+Full schema: `backend/migrations/001_init.sql`. Demo data: `backend/seed/seed.sql`.
